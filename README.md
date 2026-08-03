@@ -1,9 +1,7 @@
-# Claude Code status line — backup
+# Claude Code status line
 
-Verbatim backup of a custom [Claude Code](https://claude.com/claude-code) status
-line and its companion skill. Captured from a root-homed Ubuntu 24.04 server, so
-paths inside the files are absolute `/root/...` — adjust if restoring somewhere
-with a different home.
+A custom [Claude Code](https://claude.com/claude-code) status line, plus a skill
+documenting how it works and how to modify it safely.
 
 Renders:
 
@@ -22,7 +20,7 @@ their reset countdowns.
 | `skills/statusline/SKILL.md` | Skill documenting the stdin payload schema, the gotchas, and the rules for editing the script. |
 | `skills/statusline/statusline-command.sh` | The skill's bundled copy of the script (kept in sync with the one at the root). |
 
-## Restore
+## Install
 
 ```bash
 git clone https://github.com/sicsGitHub/claude-code-statusline.git

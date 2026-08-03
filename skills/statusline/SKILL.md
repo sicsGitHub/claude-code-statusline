@@ -5,11 +5,11 @@ description: Build, edit, or debug the Claude Code status line — the custom li
 
 # Claude Code status line
 
-The user's status line lives at `/root/.claude/statusline-command.sh`, wired up in
-`/root/.claude/settings.json`:
+The status line script lives at `~/.claude/statusline-command.sh`, wired up in
+`~/.claude/settings.json`:
 
 ```json
-"statusLine": { "type": "command", "command": "bash /root/.claude/statusline-command.sh" }
+"statusLine": { "type": "command", "command": "bash $HOME/.claude/statusline-command.sh" }
 ```
 
 One file ships beside this one: `statusline-command.sh`, a working copy of the
@@ -78,7 +78,7 @@ printf '%s\n' "$input" > /tmp/statusline-payload.json
 # in another shell, once a render has happened:
 jq 'keys' /tmp/statusline-payload.json
 jq '.rate_limits, .context_window' /tmp/statusline-payload.json
-bash /root/.claude/statusline-command.sh < /tmp/statusline-payload.json  # replay
+bash ~/.claude/statusline-command.sh < /tmp/statusline-payload.json  # replay
 ```
 
 Remove the dump afterwards. Keeping a captured payload around to replay through
@@ -89,12 +89,12 @@ The binary is still a fallback for questions a capture can't answer (what fields
 *could* appear). Grep it by byte offset, never with a context pattern:
 
 ```bash
-F=/root/.local/share/claude/versions/2.1.220
+F=$(ls -d ~/.local/share/claude/versions/* | tail -1)
 grep -a -b -o 'resets_at' "$F" | head        # offsets
 dd if=$F bs=1 skip=$((OFFSET-900)) count=1800 2>/dev/null | tr -d '\0'
 ```
 
-A `grep -o -E '.{400}pattern.{500}'` over the 275 MB binary backtracks for
+A `grep -o -E '.{400}pattern.{500}'` over the (very large) binary backtracks for
 minutes and will time out. Byte offset then `dd` returns instantly. Treat
 anything found this way as a hypothesis until a live capture confirms it.
 
@@ -105,8 +105,8 @@ anything found this way as a hypothesis until a live capture confirms it.
    exit 0 and print something sensible for all of them — never a bare error or
    an empty line.
 2. **Unknown values render as an em dash (`—`), and the label still renders.**
-   The user explicitly wants `Current session: —, Resets in —` over a segment
-   that silently disappears, because a vanishing segment reads as breakage.
+   `Current session: —, Resets in —` is preferred over a segment that silently
+   disappears, because a vanishing segment reads as breakage.
 3. **Parse the JSON in a single `jq` call** emitting `@tsv`, read with
    `IFS=$'\t' read -r`. The status line re-renders constantly; don't spawn six
    `jq` processes. Tab-splitting (not space-splitting) is also what keeps
@@ -123,7 +123,7 @@ anything found this way as a hypothesis until a live capture confirms it.
    field name. Then the degenerate cases:
 
 ```bash
-S=/root/.claude/statusline-command.sh
+S=~/.claude/statusline-command.sh
 
 bash "$S" < /tmp/statusline-payload.json      # if one was captured
 
@@ -142,13 +142,17 @@ Cover at minimum: missing `rate_limits`, one quota
 present and the other absent, `used_percentage: 0` (must render `0%`, not `—`),
 a sub-1% value (must not get scaled), `resets_at: null`, `{}`, and non-JSON.
 
-## History of user preferences
+## Design decisions
 
-- The line began as a conversion of the `PS1` in `/root/.bashrc`
-  (`\u@\h:\w`) and later carried session cost and a `ctx:NN%` counter.
-- The user then replaced all of it with the model / context-meter /
-  rate-limit format above. **user@host and session cost are deliberately gone.**
-- cwd was added back once, then removed again on request. Don't reintroduce it
-  unasked.
-- The `.bak` of the PS1-derived version was deleted at the user's request. The
-  source `PS1` is still in `/root/.bashrc` if that style is ever wanted again.
+Things the line deliberately does **not** show, so they don't get "helpfully"
+added back:
+
+- **`user@host`** — a status line sits inside one terminal on one machine; the
+  shell prompt already answers this.
+- **Session cost** — dropped in favour of the rate-limit quotas, which are what
+  actually constrain a session.
+- **cwd** — the shell prompt shows it, and it makes the line long enough to wrap
+  on narrow terminals.
+
+Adding any of these is easy (`.workspace.current_dir` and `.cost.total_cost_usd`
+are both in the payload); they were considered and cut, not overlooked.
