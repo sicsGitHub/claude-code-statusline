@@ -138,21 +138,6 @@ echo '{}'       | bash "$S"   # must not error
 echo 'not json' | bash "$S"   # must not error
 ```
 
-Cover at minimum: missing `rate_limits`, one quota
-present and the other absent, `used_percentage: 0` (must render `0%`, not `—`),
-a sub-1% value (must not get scaled), `resets_at: null`, `{}`, and non-JSON.
-
-## Design decisions
-
-Things the line deliberately does **not** show, so they don't get "helpfully"
-added back:
-
-- **`user@host`** — a status line sits inside one terminal on one machine; the
-  shell prompt already answers this.
-- **Session cost** — dropped in favour of the rate-limit quotas, which are what
-  actually constrain a session.
-- **cwd** — the shell prompt shows it, and it makes the line long enough to wrap
-  on narrow terminals.
-
-Adding any of these is easy (`.workspace.current_dir` and `.cost.total_cost_usd`
-are both in the payload); they were considered and cut, not overlooked.
+Cover at minimum: missing `rate_limits`, one quota present and the other absent,
+`used_percentage: 0` (must render `0%`, not `—`), a sub-1% value (must not get
+scaled), `resets_at: null`, `{}`, and non-JSON.
