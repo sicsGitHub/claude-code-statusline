@@ -27,9 +27,13 @@ git clone https://github.com/sicsGitHub/claude-code-statusline.git
 cd claude-code-statusline
 
 cp statusline-command.sh ~/.claude/
-mkdir -p ~/.claude/skills
-cp -r skills/statusline ~/.claude/skills/
+mkdir -p ~/.claude/skills/statusline
+cp -r skills/statusline/. ~/.claude/skills/statusline/
 ```
+
+The trailing `/.` matters: plain `cp -r skills/statusline ~/.claude/skills/`
+nests a second `statusline/` inside the directory when one is already there, so
+it works on a fresh install but silently misplaces the files on an update.
 
 Then register it in `~/.claude/settings.json` — merge rather than hand-edit, so
 existing keys survive:
